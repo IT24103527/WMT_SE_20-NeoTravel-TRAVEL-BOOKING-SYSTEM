@@ -74,6 +74,9 @@ const sr = StyleSheet.create({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ProfileScreen({ navigation }) {
   const { user: authUser, setUser: setAuthUser, logout } = useAuth();
+  //admin injection
+  const role = authUser?.role || 'user';
+
   const { profile, loading, error, refetch } = useProfile();
 
   const [activeTab, setActiveTab] = useState(0);
@@ -341,6 +344,37 @@ export default function ProfileScreen({ navigation }) {
           </View>
           <Button title="Save Preferences" onPress={handleSavePreferences} loading={prefSaving} style={{ marginTop: 12 }} />
         </View>
+
+        {/* Admin Panel */}
+        {role === 'admin' && (
+          <View style={styles.section}>
+            <SectionHeader title="Admin Panel" />
+            <View style={styles.card}>
+
+              <SettingRow
+                icon="📦"
+                label="Manage Packages"
+                sub="Create, update, delete packages"
+                onPress={() => navigation.navigate('Packages',{ user: profile })}
+              />
+
+              <SettingRow
+                icon="📅"
+                label="All Bookings"
+                sub="View all user bookings"
+                onPress={() => navigation.navigate('Bookings')}
+              />
+
+              <SettingRow
+                icon="👥"
+                label="Manage Users"
+                sub="View and control users"
+                onPress={() => navigation.navigate('AdminUsers')}
+              />
+
+            </View>
+          </View>
+        )}
       </>
     );
   };
@@ -407,6 +441,30 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </View>
 
+      {/* 🔥 Admin Settings */}
+        {role === 'admin' && (
+          <View style={styles.section}>
+            <SectionHeader title="Admin Controls" />
+            <View style={styles.card}>
+
+              <SettingRow
+                icon="📊"
+                label="System Dashboard"
+                sub="Overview of platform"
+                onPress={() => navigation.navigate('Dashboard')}
+              />
+
+              <SettingRow
+                icon="⚙️"
+                label="System Settings"
+                sub="Configure app behavior"
+                onPress={() => navigation.navigate('Settings')}
+              />
+
+            </View>
+          </View>
+        )}
+
       <View style={styles.section}>
         <SectionHeader title="Danger Zone" />
         <View style={styles.card}>
@@ -455,7 +513,13 @@ export default function ProfileScreen({ navigation }) {
             ) : null}
           </View>
           <Text style={styles.heroName}>{profile?.username || authUser?.username || '—'}</Text>
+
           <Text style={styles.heroEmail}>{profile?.email || authUser?.email || '—'}</Text>
+
+          <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+          Role: {role.toUpperCase()}
+          </Text>
+
           <View style={styles.heroBadgeRow}>
             <View style={styles.tierBadge}>
               <Text style={styles.tierBadgeText}>{currentTier?.icon} {currentTier?.label} Explorer</Text>

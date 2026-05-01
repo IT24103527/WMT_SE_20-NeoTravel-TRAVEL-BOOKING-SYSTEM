@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
+import { Animated , View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import Loader from '../components/common/Loader';
 import useAuth from '../hooks/useAuth';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
+import Packages from '../screens/packages/Packages';
+import Bookings from '../screens/booking/Bookings';
+import BottomNav from '../components/common/BottomNav';
 
 export default function AppNavigator() {
   const { user, loading } = useAuth();
@@ -33,11 +36,26 @@ export default function AppNavigator() {
 
   if (loading) return <Loader />;
 
+  //changed whole 
   return (
-    <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
-      <NavigationContainer>
-        {user ? <MainNavigator /> : <AuthNavigator />}
-      </NavigationContainer>
-    </Animated.View>
-  );
+      <Animated.View style={{ flex: 1, opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+        <NavigationContainer>
+          
+          {user ? (
+            <View style={{ flex: 1 }}>
+              
+              {/* Screens */}
+              <MainNavigator />
+
+              {/*Nav*/}
+              <BottomNav />
+
+            </View>
+          ) : (
+            <AuthNavigator />
+          )}
+
+        </NavigationContainer>
+      </Animated.View>
+);
 }

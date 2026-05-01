@@ -12,10 +12,19 @@ const connectDB = require('./src/config/db');
 const { apiLimiter } = require('./src/middleware/rateLimit.middleware');
 
 const authRoutes      = require('./src/routes/auth.routes');
+
 const userRoutes      = require('./src/routes/user.routes');
+
 const errorMiddleware = require('./src/middleware/error.middleware');
 
-connectDB();
+//packages
+const packageRoutes = require('./src/routes/package.routes');
+
+//booking
+const bookingRoutes = require('./src/routes/booking.routes');
+
+//admin seed
+const seedAdmin = require("./src/config/seedAdmin");
 
 const app = express();
 
@@ -36,6 +45,10 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth',  authRoutes);
 app.use('/api/users', userRoutes);
 
+//booking and packages
+app.use('/api/packages', packageRoutes);
+app.use('/api/bookings', bookingRoutes);
+
 // 404
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
@@ -43,9 +56,17 @@ app.use((req, res) => {
 
 app.use(errorMiddleware);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+async function start() 
+{
+      await connectDB();
+      await seedAdmin();
+
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
 });
+
+}
+start();
 
 module.exports = app;

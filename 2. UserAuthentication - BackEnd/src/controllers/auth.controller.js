@@ -126,7 +126,7 @@ const login = async (req, res, next) => {
 
     respond(res).ok('Login successful', {
       accessToken, refreshToken,
-      user: { id: user._id, username: user.username, email: user.email, isVerified: user.isVerified },
+      user: { id: user._id, username: user.username, email: user.email,role: user.role, isVerified: user.isVerified },
     });
   } catch (err) { next(err); }
 };

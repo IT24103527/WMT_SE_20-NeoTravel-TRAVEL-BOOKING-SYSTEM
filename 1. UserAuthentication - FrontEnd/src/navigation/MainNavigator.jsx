@@ -9,6 +9,9 @@ import ExportDataScreen          from '../screens/profile/ExportDataScreen';
 import VerifyEmailSettingsScreen from '../screens/profile/VerifyEmailSettingsScreen';
 import TokenInfoScreen           from '../screens/profile/TokenInfoScreen';
 import { colors } from '../utils/theme';
+import Packages from '../screens/packages/Packages';
+import Bookings from '../screens/booking/Bookings';
+import AdminPackages from '../screens/packages/AdminPackages'
 
 const Stack = createNativeStackNavigator();
 
@@ -38,11 +41,15 @@ const modalOpts = {
 export default function MainNavigator() {
   return (
     <Stack.Navigator screenOptions={headerOpts}>
+
+      {/* PROFILE */}
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
         options={{ title: 'My Profile', animation: 'fade' }}
       />
+
+      {/* OTHER PROFILE SCREENS */}
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password', ...modalOpts }} />
       <Stack.Screen name="LoginHistory"   component={LoginHistoryScreen}   options={{ title: 'Login History' }} />
       <Stack.Screen name="ActivityLog"    component={ActivityLogScreen}    options={{ title: 'Activity Log' }} />
@@ -51,6 +58,13 @@ export default function MainNavigator() {
       <Stack.Screen name="ExportData"     component={ExportDataScreen}     options={{ title: 'Export My Data', ...modalOpts }} />
       <Stack.Screen name="VerifyEmailSettings" component={VerifyEmailSettingsScreen} options={{ title: 'Verify Email', ...modalOpts }} />
       <Stack.Screen name="TokenInfo"      component={TokenInfoScreen}      options={{ title: 'JWT Token Info' }} />
+
+       {/* COMMON */}
+      <Stack.Screen name="Packages" component={Packages} />
+      <Stack.Screen name="Bookings" component={Bookings} />
+      <Stack.Screen 
+      name="AdminPackages" component={AdminPackages} options={{ title: 'Manage Packages' }} 
+    />
     </Stack.Navigator>
   );
 }
