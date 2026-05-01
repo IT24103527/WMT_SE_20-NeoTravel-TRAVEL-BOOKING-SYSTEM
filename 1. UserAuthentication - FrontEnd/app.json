@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "NeoTravel",
+    "slug": "neotravel",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

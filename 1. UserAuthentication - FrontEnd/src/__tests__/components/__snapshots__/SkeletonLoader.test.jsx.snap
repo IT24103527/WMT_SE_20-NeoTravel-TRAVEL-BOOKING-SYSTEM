@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SkeletonLoader component snapshot matches 1`] = `
+<View
+  collapsable={false}
+  style={
+    {
+      "backgroundColor": "#D0D9EC",
+      "borderRadius": 8,
+      "height": 20,
+      "opacity": 0.4,
+      "width": 100,
+    }
+  }
+/>
+`;

@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InputField component matches snapshot for basic input 1`] = `
+<View
+  style={
+    {
+      "marginBottom": 16,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "color": "#94A3B8",
+          "fontSize": 11,
+          "fontWeight": "700",
+          "letterSpacing": 1.2,
+          "marginBottom": 8,
+          "textTransform": "uppercase",
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Email
+  </Text>
+  <View
+    collapsable={false}
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#EAF0FA",
+        "borderColor": "rgba(208, 217, 236, 1)",
+        "borderRadius": 14,
+        "borderWidth": 1.5,
+        "flexDirection": "row",
+        "minHeight": 52,
+        "paddingHorizontal": 16,
+      }
+    }
+  >
+    <TextInput
+      accessibilityLabel="Email"
+      autoCapitalize="none"
+      keyboardType="default"
+      onBlur={[Function]}
+      onChangeText={[Function]}
+      onFocus={[Function]}
+      placeholder="you@example.com"
+      placeholderTextColor="#94A3B8"
+      secureTextEntry={false}
+      style={
+        {
+          "color": "#0F172A",
+          "flex": 1,
+          "fontSize": 15,
+          "paddingVertical": 14,
+        }
+      }
+      value=""
+    />
+  </View>
+</View>
+`;
