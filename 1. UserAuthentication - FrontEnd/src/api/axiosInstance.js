@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getToken, getRefreshToken, saveTokens, removeTokens } from '../utils/storage';
 
 const axiosInstance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.2:8080/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 });
