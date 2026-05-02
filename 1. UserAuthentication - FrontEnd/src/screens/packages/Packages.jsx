@@ -48,7 +48,14 @@ export default function Packages() {
                 bookingDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
                 travelers: 1,
               });
-              Alert.alert('Success', 'Booking created successfully!');
+              Alert.alert(
+                'Success',
+                'Booking created successfully!',
+                [
+                  { text: 'View My Bookings', onPress: () => navigation.navigate('Bookings') },
+                  { text: 'OK', style: 'cancel' },
+                ]
+              );
             } catch (err) {
               Alert.alert('Failed', err.response?.data?.message || 'Could not create booking');
             } finally {
@@ -59,8 +66,6 @@ export default function Packages() {
       ]
     );
   };
-
-  if (loading) return <Loader />;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>

@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const packageSchema = new mongoose.Schema({
   title: String,
   description: String,
+  destination: String,
+  duration: Number,
   price: Number,
   image: String,
 

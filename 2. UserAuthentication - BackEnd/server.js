@@ -14,6 +14,7 @@ const { apiLimiter } = require('./src/middleware/rateLimit.middleware');
 
 const authRoutes      = require('./src/routes/auth.routes');
 const imageRoutes     = require('./src/routes/imageRoutes');
+const bookingRoutes   = require('./src/routes/booking.routes');
 
 const userRoutes      = require('./src/routes/user.routes');
 
@@ -21,8 +22,6 @@ const errorMiddleware = require('./src/middleware/error.middleware');
 
 //packages
 const packageRoutes = require('./src/routes/package.routes');
-
-//booking
 
 //admin seed
 const seedAdmin = require("./src/config/seedAdmin");
@@ -47,6 +46,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth',  authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 //booking and packages
 app.use('/api/packages', packageRoutes);
