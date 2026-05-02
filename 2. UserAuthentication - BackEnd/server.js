@@ -23,7 +23,6 @@ const errorMiddleware = require('./src/middleware/error.middleware');
 const packageRoutes = require('./src/routes/package.routes');
 
 //booking
-const bookingRoutes = require('./src/routes/booking.routes');
 
 //admin seed
 const seedAdmin = require("./src/config/seedAdmin");
@@ -51,7 +50,6 @@ app.use('/api/images', imageRoutes);
 
 //booking and packages
 app.use('/api/packages', packageRoutes);
-app.use('/api/bookings', bookingRoutes);
 
 // 404
 app.use((req, res) => {

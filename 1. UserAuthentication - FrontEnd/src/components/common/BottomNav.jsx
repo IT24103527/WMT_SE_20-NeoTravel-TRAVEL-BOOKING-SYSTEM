@@ -59,8 +59,6 @@ export default function BottomNav() {
       }}
     >
       <TabItem name="Packages" icon="cube" label="Packages" />
-      <TabItem name="Bookings" icon="calendar" label="Bookings" />
-
       {user?.role === 'admin' && (
         <TabItem name="AdminPackages" icon="settings" label="Admin" />
       )}
