@@ -1,8 +1,9 @@
 // src/screens/packages/AdminPackages.jsx
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, TextInput
+  View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, TextInput, Image, Platform
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
 import AnimatedModal from '../../components/common/AnimatedModal';
@@ -12,6 +13,7 @@ import {
   updatePackage, 
   deletePackage 
 } from '../../api/package.api';
+import { uploadImage } from '../../api/image.api';
 import { colors, shadowSm } from '../../utils/theme';
 
 export default function AdminPackages() {
@@ -25,7 +27,9 @@ export default function AdminPackages() {
     price: '',
     image: ''
   });
+  const [selectedImage, setSelectedImage] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchPackages();
@@ -56,7 +60,64 @@ export default function AdminPackages() {
       setEditingPackage(null);
       setFormData({ title: '', description: '', price: '', image: '' });
     }
+    setSelectedImage(null);
     setModalVisible(true);
+  };
+
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Media library access is required to select photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      const selected = result.assets?.[0] || result;
+      if (!result.cancelled) {
+        setSelectedImage(selected);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Unable to select image. Please try again.');
+    }
+  };
+
+  const prepareImageFormData = (image, packageId) => {
+    const uri = image.uri || image;
+    const filename = image.fileName || uri.split('/').pop();
+    const fileExt = filename.split('.').pop().toLowerCase();
+    const fileType = `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
+
+    const formData = new FormData();
+    formData.append('packageId', packageId);
+    formData.append('image', {
+      uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+      name: filename,
+      type: fileType,
+    });
+    return formData;
+  };
+
+  const uploadPackageImage = async (packageId) => {
+    if (!selectedImage) return null;
+
+    try {
+      setUploadingImage(true);
+      const formData = prepareImageFormData(selectedImage, packageId);
+      const { data } = await uploadImage(formData);
+      return data?.image;
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Image upload failed');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSave = async () => {
@@ -71,13 +132,20 @@ export default function AdminPackages() {
         ...formData,
         price: parseFloat(formData.price)
       };
+      let savedPackage = null;
 
       if (editingPackage) {
-        await updatePackage(editingPackage._id, payload);
+        const { data } = await updatePackage(editingPackage._id, payload);
+        savedPackage = data.data || data;
         Alert.alert('Success', 'Package updated successfully');
       } else {
-        await createPackage(payload);
+        const { data } = await createPackage(payload);
+        savedPackage = data.data || data;
         Alert.alert('Success', 'Package created successfully');
+      }
+
+      if (selectedImage && savedPackage?._id) {
+        await uploadPackageImage(savedPackage._id);
       }
 
       setModalVisible(false);
@@ -196,6 +264,18 @@ export default function AdminPackages() {
           onChangeText={(text) => setFormData({ ...formData, image: text })}
         />
 
+        <Button
+          title={selectedImage ? 'Change Image' : 'Select Image'}
+          onPress={pickImage}
+          variant="secondary"
+          style={styles.uploadBtn}
+          loading={uploadingImage}
+        />
+
+        {selectedImage?.uri && (
+          <Image source={{ uri: selectedImage.uri }} style={styles.previewImage} />
+        )}
+
         <Button 
           title={saving ? "Saving..." : editingPackage ? "Update Package" : "Create Package"} 
           onPress={handleSave} 
@@ -264,6 +344,14 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 16,
     fontSize: 16,
+    backgroundColor: colors.surfaceHigh,
+  },
+  uploadBtn: { marginBottom: 14 },
+  previewImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 16,
+    marginBottom: 16,
     backgroundColor: colors.surfaceHigh,
   },
   saveBtn: { marginTop: 10 },

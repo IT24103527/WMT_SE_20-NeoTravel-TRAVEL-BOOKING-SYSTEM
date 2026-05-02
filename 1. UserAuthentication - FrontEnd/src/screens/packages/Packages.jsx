@@ -89,6 +89,12 @@ export default function Packages() {
                 loading={bookingLoading === pkg._id}
                 style={styles.bookBtn}
               />
+              <Button
+                title="View Details"
+                onPress={() => navigation.navigate('PackageDetails', { packageId: pkg._id })}
+                variant="secondary"
+                style={styles.detailsBtn}
+              />
             </View>
           </View>
         ))
@@ -140,6 +146,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bookBtn: { marginTop: 8 },
+  detailsBtn: { marginTop: 10 },
   empty: {
     textAlign: 'center',
     color: colors.textMuted,
