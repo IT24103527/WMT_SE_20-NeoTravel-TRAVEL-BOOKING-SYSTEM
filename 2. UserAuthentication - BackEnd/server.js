@@ -14,6 +14,7 @@ const { apiLimiter } = require('./src/middleware/rateLimit.middleware');
 
 const authRoutes      = require('./src/routes/auth.routes');
 const imageRoutes     = require('./src/routes/imageRoutes');
+const reviewRoutes    = require('./src/routes/review.routes');
 
 const userRoutes      = require('./src/routes/user.routes');
 
@@ -47,6 +48,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth',  authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 //booking and packages
 app.use('/api/packages', packageRoutes);
@@ -69,6 +71,9 @@ async function start()
 });
 
 }
-start();
+
+if (require.main === module) {
+  start();
+}
 
 module.exports = app;

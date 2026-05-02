@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -9,42 +9,54 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import Loader from '../../components/common/Loader';
 import { getPackageById } from '../../api/package.api';
 import { getImagesByPackage, resolveUploadUrl, deleteImage } from '../../api/image.api';
+import { getPackageReviews } from '../../api/review.api';
 import { colors, shadowSm } from '../../utils/theme';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function PackageDetails() {
   const route = useRoute();
+  const navigation = useNavigation();
   const packageId = route.params?.packageId;
 
   const [pkg, setPkg] = useState(null);
   const [images, setImages] = useState([]);
+  const [reviewSummary, setReviewSummary] = useState({ reviewCount: 0, averageRating: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchPackageDetails = useCallback(async () => {
     if (!packageId) return;
-    fetchPackageDetails();
-  }, [packageId]);
-
-  const fetchPackageDetails = async () => {
     try {
       setLoading(true);
-      const packageRes = await getPackageById(packageId);
+      const [packageRes, imagesRes, reviewsRes] = await Promise.all([
+        getPackageById(packageId),
+        getImagesByPackage(packageId),
+        getPackageReviews(packageId),
+      ]);
+
       const packageData = packageRes.data.data || packageRes.data;
       setPkg(packageData);
 
-      const imagesRes = await getImagesByPackage(packageId);
       setImages(imagesRes.data.images || []);
+
+      const reviewData = reviewsRes.data.data || reviewsRes.data;
+      setReviewSummary(reviewData.summary || { reviewCount: 0, averageRating: 0 });
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to load package details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [packageId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPackageDetails();
+    }, [fetchPackageDetails])
+  );
 
   const handleDeleteImage = async (imageId, filename) => {
     Alert.alert(
@@ -90,6 +102,33 @@ export default function PackageDetails() {
       <Text style={styles.title}>{pkg.title}</Text>
       <Text style={styles.price}>${pkg.price}</Text>
       <Text style={styles.description}>{pkg.description}</Text>
+
+      <View style={styles.reviewCard}>
+        <Text style={styles.sectionTitle}>Ratings</Text>
+        <View style={styles.ratingRow}>
+          <Text style={styles.ratingValue}>{Number(reviewSummary.averageRating || 0).toFixed(1)}</Text>
+          <View style={styles.starsRow}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Text
+                key={index}
+                style={[
+                  styles.star,
+                  index < Math.round(reviewSummary.averageRating || 0) && styles.starActive,
+                ]}
+              >
+                ★
+              </Text>
+            ))}
+          </View>
+          <Text style={styles.reviewCount}>{reviewSummary.reviewCount || 0} reviews</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.reviewButton}
+          onPress={() => navigation.navigate('Reviews', { packageId: pkg._id, packageTitle: pkg.title })}
+        >
+          <Text style={styles.reviewButtonText}>View / Add Reviews</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.gallerySection}>
         <Text style={styles.sectionTitle}>Package Images</Text>
@@ -137,6 +176,28 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary, marginBottom: 12 },
   price: { fontSize: 22, fontWeight: '700', color: colors.primary, marginBottom: 16 },
   description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 24 },
+  reviewCard: {
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 20,
+    ...shadowSm,
+  },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
+  ratingValue: { fontSize: 26, fontWeight: '800', color: colors.primary },
+  starsRow: { flexDirection: 'row', gap: 3 },
+  star: { fontSize: 18, color: colors.border },
+  starActive: { color: colors.warning },
+  reviewCount: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+  reviewButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  reviewButtonText: { color: colors.white, fontWeight: '700', fontSize: 14 },
   gallerySection: { marginTop: 8 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
   galleryScroll: { marginBottom: 20 },

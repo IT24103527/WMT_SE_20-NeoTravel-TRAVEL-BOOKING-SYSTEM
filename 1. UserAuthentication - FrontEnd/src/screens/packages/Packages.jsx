@@ -93,6 +93,12 @@ export default function Packages() {
                 variant="secondary"
                 style={styles.detailsBtn}
               />
+              <Button
+                title="Reviews"
+                onPress={() => navigation.navigate('Reviews', { packageId: pkg._id, packageTitle: pkg.title })}
+                variant="ghost"
+                style={styles.detailsBtn}
+              />
             </View>
           </View>
         ))

@@ -14,13 +14,18 @@ export const AuthProvider = ({ children }) => {
 
   // Restore session on launch
   useEffect(() => {
+    let isMounted = true;
+    const loadingTimeout = setTimeout(() => {
+      if (isMounted) setLoading(false);
+    }, 4000);
+
     const restore = async () => {
       try {
         const token = await getToken();
         if (!token) return;
         try {
           const { data } = await getMe();
-          setUser(data.user);
+          if (isMounted) setUser(data.user);
         } catch (err) {
           // Access token expired — try refresh
           if (err.response?.data?.code === 'TOKEN_EXPIRED') {
@@ -29,7 +34,7 @@ export const AuthProvider = ({ children }) => {
               const { data } = await refreshTokenApi({ refreshToken: refresh });
               await saveTokens(data.data.accessToken, data.data.refreshToken);
               const me = await getMe();
-              setUser(me.data.data);
+              if (isMounted) setUser(me.data.data);
             }
           } else {
             await removeTokens();
@@ -38,10 +43,15 @@ export const AuthProvider = ({ children }) => {
       } catch {
         await removeTokens();
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     restore();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(loadingTimeout);
+    };
   }, []);
 
   const login = async (email, password) => {
