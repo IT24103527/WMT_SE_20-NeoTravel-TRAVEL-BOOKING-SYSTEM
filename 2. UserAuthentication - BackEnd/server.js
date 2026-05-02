@@ -5,6 +5,7 @@ dotenv.config(); // MUST be first before any process.env usage
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
+const path = require('path');
 const express   = require('express');
 const cors      = require('cors');
 const helmet    = require('helmet');
@@ -12,6 +13,7 @@ const connectDB = require('./src/config/db');
 const { apiLimiter } = require('./src/middleware/rateLimit.middleware');
 
 const authRoutes      = require('./src/routes/auth.routes');
+const imageRoutes     = require('./src/routes/imageRoutes');
 
 const userRoutes      = require('./src/routes/user.routes');
 
@@ -41,8 +43,10 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', env: process.env.NODE_ENV, timestamp: new Date().toISOString() });
 });
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth',  authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/images', imageRoutes);
 
 //booking and packages
 app.use('/api/packages', packageRoutes);
@@ -60,7 +64,7 @@ async function start()
       await seedAdmin();
 
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    app.listen(PORT,"0.0.0.0",() => {
       console.log(`Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
 });
 
