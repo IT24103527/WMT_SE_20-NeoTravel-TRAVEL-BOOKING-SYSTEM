@@ -47,6 +47,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth',  authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 //booking and packages
 app.use('/api/packages', packageRoutes);
