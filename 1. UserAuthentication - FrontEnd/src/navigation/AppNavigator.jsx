@@ -5,8 +5,6 @@ import Loader from '../components/common/Loader';
 import useAuth from '../hooks/useAuth';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
-import Packages from '../screens/packages/Packages';
-import Bookings from '../screens/booking/Bookings';
 import BottomNav from '../components/common/BottomNav';
 
 export default function AppNavigator() {
