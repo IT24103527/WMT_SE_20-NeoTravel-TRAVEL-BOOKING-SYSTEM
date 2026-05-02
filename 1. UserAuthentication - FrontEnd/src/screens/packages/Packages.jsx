@@ -7,14 +7,12 @@ import { useNavigation } from '@react-navigation/native';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
 import { getAllPackages } from '../../api/package.api';
-import { createBooking } from '../../api/booking.api';
 import { colors, shadowSm } from '../../utils/theme';
 
 export default function Packages() {
   const navigation = useNavigation();
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [bookingLoading, setBookingLoading] = useState(null); // packageId being booked
 
   useEffect(() => {
     fetchPackages();
@@ -30,36 +28,6 @@ export default function Packages() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBookNow = async (pkg) => {
-    Alert.alert(
-      'Book Package',
-      `Confirm booking for "${pkg.title}"?\nPrice: $${pkg.price}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            setBookingLoading(pkg._id);
-            try {
-              await createBooking({
-                packageId: pkg._id,
-                bookingDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // default +7 days
-                travelers: 1
-              });
-              Alert.alert('Success', 'Booking created successfully!', [
-                { text: 'View My Bookings', onPress: () => navigation.navigate('Bookings') }
-              ]);
-            } catch (err) {
-              Alert.alert('Failed', err.response?.data?.message || 'Could not create booking');
-            } finally {
-              setBookingLoading(null);
-            }
-          }
-        }
-      ]
-    );
   };
 
   if (loading) return <Loader />;
@@ -82,13 +50,6 @@ export default function Packages() {
                 {pkg.description}
               </Text>
               <Text style={styles.price}>${pkg.price}</Text>
-
-              <Button
-                title={bookingLoading === pkg._id ? "Booking..." : "Book Now"}
-                onPress={() => handleBookNow(pkg)}
-                loading={bookingLoading === pkg._id}
-                style={styles.bookBtn}
-              />
             </View>
           </View>
         ))

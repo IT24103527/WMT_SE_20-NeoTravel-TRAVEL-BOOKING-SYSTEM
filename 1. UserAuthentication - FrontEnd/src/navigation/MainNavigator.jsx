@@ -10,7 +10,6 @@ import VerifyEmailSettingsScreen from '../screens/profile/VerifyEmailSettingsScr
 import TokenInfoScreen           from '../screens/profile/TokenInfoScreen';
 import { colors } from '../utils/theme';
 import Packages from '../screens/packages/Packages';
-import Bookings from '../screens/booking/Bookings';
 import AdminPackages from '../screens/packages/AdminPackages'
 
 const Stack = createNativeStackNavigator();
@@ -61,7 +60,6 @@ export default function MainNavigator() {
 
        {/* COMMON */}
       <Stack.Screen name="Packages" component={Packages} />
-      <Stack.Screen name="Bookings" component={Bookings} />
       <Stack.Screen 
       name="AdminPackages" component={AdminPackages} options={{ title: 'Manage Packages' }} 
     />
