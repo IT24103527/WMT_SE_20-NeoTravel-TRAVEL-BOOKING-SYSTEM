@@ -14,6 +14,10 @@ const imageSchema = new mongoose.Schema({
     ref: 'Package',
     required: true,
   },
+  isCover: {
+    type: Boolean,
+    default: false,
+  },
   uploadedAt: {
     type: Date,
     default: Date.now,

@@ -6,7 +6,7 @@ const AppError = require('../utils/AppError');
 
 exports.uploadImage = async (req, res, next) => {
   try {
-    const { packageId } = req.body;
+    const { packageId, isCover } = req.body;
     if (!packageId) {
       return next(new AppError('packageId is required', 400));
     }
@@ -20,10 +20,21 @@ exports.uploadImage = async (req, res, next) => {
       return next(new AppError('Package not found', 404));
     }
 
+    // If this is a cover image, remove existing cover for this package
+    if (isCover === 'true' || isCover === true) {
+      const existingCover = await Image.findOne({ packageId, isCover: true });
+      if (existingCover) {
+        const oldFilePath = path.resolve(__dirname, '../../uploads', existingCover.filename);
+        await fs.promises.unlink(oldFilePath).catch(() => {});
+        await existingCover.deleteOne();
+      }
+    }
+
     const image = await Image.create({
       url: `/uploads/${req.file.filename}`,
       filename: req.file.filename,
       packageId: pkg._id,
+      isCover: isCover === 'true' || isCover === true ? true : false,
     });
 
     res.status(201).json({ success: true, image });
@@ -36,7 +47,17 @@ exports.getImagesByPackage = async (req, res, next) => {
   try {
     const { packageId } = req.params;
     const images = await Image.find({ packageId }).sort({ uploadedAt: -1 });
-    res.json({ success: true, images });
+
+    // Separate cover and gallery images
+    const coverImage = images.find(img => img.isCover);
+    const galleryImages = images.filter(img => !img.isCover);
+
+    res.json({ 
+      success: true, 
+      coverImage: coverImage || null,
+      galleryImages,
+      images // Keep for backward compatibility
+    });
   } catch (error) {
     next(error);
   }

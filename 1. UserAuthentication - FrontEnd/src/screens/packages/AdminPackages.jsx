@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, TextInput, Image, Platform
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
@@ -17,6 +18,7 @@ import { uploadImage } from '../../api/image.api';
 import { colors, shadowSm } from '../../utils/theme';
 
 export default function AdminPackages() {
+  const navigation = useNavigation();
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -133,6 +135,7 @@ export default function AdminPackages() {
         price: parseFloat(formData.price)
       };
       let savedPackage = null;
+      let isNewPackage = false;
 
       if (editingPackage) {
         const { data } = await updatePackage(editingPackage._id, payload);
@@ -141,7 +144,7 @@ export default function AdminPackages() {
       } else {
         const { data } = await createPackage(payload);
         savedPackage = data.data || data;
-        Alert.alert('Success', 'Package created successfully');
+        isNewPackage = true;
       }
 
       if (selectedImage && savedPackage?._id) {
@@ -150,6 +153,11 @@ export default function AdminPackages() {
 
       setModalVisible(false);
       fetchPackages(); // refresh list
+
+      // Navigate to UploadImagesScreen for new packages only
+      if (isNewPackage && savedPackage?._id) {
+        navigation.navigate('UploadImages', { packageId: savedPackage._id });
+      }
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to save package');
     } finally {

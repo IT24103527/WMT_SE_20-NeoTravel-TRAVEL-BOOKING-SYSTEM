@@ -7,6 +7,7 @@ export const uploadImage = (formData) => axiosInstance.post('/images/upload', fo
 });
 
 export const getImagesByPackage = (packageId) => axiosInstance.get(`/images/package/${packageId}`);
+
 export const deleteImage = (id) => axiosInstance.delete(`/images/${id}`);
 
 export const resolveUploadUrl = (url) => {
@@ -15,3 +16,4 @@ export const resolveUploadUrl = (url) => {
   const baseUrl = getApiRoot();
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 };
+

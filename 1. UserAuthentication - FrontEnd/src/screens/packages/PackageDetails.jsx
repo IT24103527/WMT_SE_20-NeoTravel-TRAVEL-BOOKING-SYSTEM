@@ -24,7 +24,8 @@ export default function PackageDetails() {
   const packageId = route.params?.packageId;
 
   const [pkg, setPkg] = useState(null);
-  const [images, setImages] = useState([]);
+  const [coverImage, setCoverImage] = useState(null);
+  const [galleryImages, setGalleryImages] = useState([]);
   const [reviewSummary, setReviewSummary] = useState({ reviewCount: 0, averageRating: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +42,18 @@ export default function PackageDetails() {
       const packageData = packageRes.data.data || packageRes.data;
       setPkg(packageData);
 
-      setImages(imagesRes.data.images || []);
+      // Handle both old and new API response formats
+      const imagesData = imagesRes.data;
+      if (imagesData.coverImage !== undefined) {
+        // New API format with cover and gallery
+        setCoverImage(imagesData.coverImage);
+        setGalleryImages(imagesData.galleryImages || []);
+      } else {
+        // Fallback to old format
+        const allImages = imagesData.images || [];
+        setCoverImage(null);
+        setGalleryImages(allImages);
+      }
 
       const reviewData = reviewsRes.data.data || reviewsRes.data;
       setReviewSummary(reviewData.summary || { reviewCount: 0, averageRating: 0 });
@@ -70,7 +82,11 @@ export default function PackageDetails() {
           onPress: async () => {
             try {
               await deleteImage(imageId);
-              setImages(prev => prev.filter(img => img._id !== imageId));
+              if (coverImage?._id === imageId) {
+                setCoverImage(null);
+              } else {
+                setGalleryImages(prev => prev.filter(img => img._id !== imageId));
+              }
               Alert.alert('Success', 'Image deleted successfully');
             } catch (err) {
               Alert.alert('Error', err.response?.data?.message || 'Failed to delete image');
@@ -91,14 +107,40 @@ export default function PackageDetails() {
     );
   }
 
-  const imageSources = images.length
-    ? images.map((image) => ({ uri: resolveUploadUrl(image.url) }))
+  const imageSources = galleryImages.length
+    ? galleryImages.map((image) => ({ uri: resolveUploadUrl(image.url) }))
     : pkg.image
       ? [{ uri: resolveUploadUrl(pkg.image) }]
       : [];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Cover Image */}
+      {(coverImage || pkg.image) && (
+        <View style={styles.coverImageSection}>
+          <Image
+            source={{
+              uri: coverImage
+                ? resolveUploadUrl(coverImage.url)
+                : resolveUploadUrl(pkg.image),
+            }}
+            style={styles.coverImage}
+            resizeMode="cover"
+          />
+          {coverImage && (
+            <TouchableOpacity
+              style={styles.coverDeleteButton}
+              onPress={() => handleDeleteImage(coverImage._id, coverImage.filename)}
+            >
+              <Text style={styles.deleteIcon}>×</Text>
+            </TouchableOpacity>
+          )}
+          <View style={styles.coverBadge}>
+            <Text style={styles.coverBadgeText}>Cover Image</Text>
+          </View>
+        </View>
+      )}
+
       <Text style={styles.title}>{pkg.title}</Text>
       <Text style={styles.price}>${pkg.price}</Text>
       <Text style={styles.description}>{pkg.description}</Text>
@@ -130,42 +172,29 @@ export default function PackageDetails() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.gallerySection}>
-        <Text style={styles.sectionTitle}>Package Images</Text>
-        {images.length === 0 && !pkg.image ? (
-          <View style={styles.emptyGallery}>
-            <Text style={styles.emptyText}>No images uploaded for this package yet.</Text>
-          </View>
-        ) : (
+      {/* Gallery Images */}
+      {galleryImages.length > 0 && (
+        <View style={styles.gallerySection}>
+          <Text style={styles.sectionTitle}>Gallery</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
-            {images.length > 0 ? (
-              images.map((image) => (
-                <View key={image._id} style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: resolveUploadUrl(image.url) }}
-                    style={styles.galleryImage}
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDeleteImage(image._id, image.filename)}
-                  >
-                    <Text style={styles.deleteIcon}>×</Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-            ) : (
-              pkg.image && (
+            {galleryImages.map((image) => (
+              <View key={image._id} style={styles.imageContainer}>
                 <Image
-                  source={{ uri: resolveUploadUrl(pkg.image) }}
+                  source={{ uri: resolveUploadUrl(image.url) }}
                   style={styles.galleryImage}
                   resizeMode="cover"
                 />
-              )
-            )}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteImage(image._id, image.filename)}
+                >
+                  <Text style={styles.deleteIcon}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
           </ScrollView>
-        )}
-      </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -173,6 +202,44 @@ export default function PackageDetails() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16 },
+  coverImageSection: {
+    position: 'relative',
+    marginBottom: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...shadowSm,
+  },
+  coverImage: {
+    width: '100%',
+    height: 280,
+    backgroundColor: colors.surfaceHigh,
+  },
+  coverDeleteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: colors.danger,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadowSm,
+  },
+  coverBadge: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    backgroundColor: colors.primary + 'E6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  coverBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.white,
+  },
   title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary, marginBottom: 12 },
   price: { fontSize: 22, fontWeight: '700', color: colors.primary, marginBottom: 16 },
   description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 24 },
