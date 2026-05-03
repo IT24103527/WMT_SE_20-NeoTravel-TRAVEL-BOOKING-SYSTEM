@@ -14,6 +14,7 @@ import PackageDetails from '../screens/packages/PackageDetails';
 import ReviewScreen from '../screens/packages/ReviewScreen';
 import Bookings from '../screens/booking/Bookings';
 import AdminPackages from '../screens/packages/AdminPackages'
+import FavoritesScreen from '../screens/favorites/FavoritesScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -69,6 +70,11 @@ export default function MainNavigator() {
       <Stack.Screen 
       name="AdminPackages" component={AdminPackages} options={{ title: 'Manage Packages' }} 
     />
+      <Stack.Screen
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{ title: 'My Favorites' }}
+      />
     </Stack.Navigator>
   );
 }

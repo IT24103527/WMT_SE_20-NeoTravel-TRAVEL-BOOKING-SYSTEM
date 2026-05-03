@@ -1,13 +1,15 @@
 // src/screens/packages/Packages.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
 import { getAllPackages } from '../../api/package.api';
 import { createBooking } from '../../api/booking.api';
+import { toggleFavorite, getMyFavorites } from '../../api/favorite.api';
 import { colors, shadowSm } from '../../utils/theme';
 
 export default function Packages() {
@@ -15,10 +17,24 @@ export default function Packages() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(null);
+  // favoriteIds: Set of packageIds the user has already favorited
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [togglingId, setTogglingId] = useState(null); // packageId being toggled
 
   useEffect(() => {
     fetchPackages();
+    fetchFavoriteIds();
   }, []);
+
+  const fetchFavoriteIds = async () => {
+    try {
+      const { data } = await getMyFavorites();
+      const ids = (data.data?.favorites || []).map((f) => f._id);
+      setFavoriteIds(new Set(ids));
+    } catch {
+      // Non-critical — silently ignore
+    }
+  };
 
   const fetchPackages = async () => {
     try {
@@ -29,6 +45,23 @@ export default function Packages() {
       Alert.alert('Error', 'Failed to load packages');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async (pkg) => {
+    setTogglingId(pkg._id);
+    try {
+      const { data } = await toggleFavorite(pkg._id);
+      const isFav = data.data?.favorited;
+      setFavoriteIds((prev) => {
+        const next = new Set(prev);
+        isFav ? next.add(pkg._id) : next.delete(pkg._id);
+        return next;
+      });
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Could not update favorites');
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -77,7 +110,21 @@ export default function Packages() {
         packages.map((pkg) => (
           <View key={pkg._id} style={styles.card}>
             {pkg.image && (
-              <Image source={{ uri: pkg.image }} style={styles.image} />
+              <View style={styles.imageWrapper}>
+                <Image source={{ uri: pkg.image }} style={styles.image} />
+                {/* ❤️ Favorite toggle button */}
+                <TouchableOpacity
+                  style={styles.heartBtn}
+                  onPress={() => handleToggleFavorite(pkg)}
+                  disabled={togglingId === pkg._id}
+                >
+                  <Ionicons
+                    name={favoriteIds.has(pkg._id) ? 'heart' : 'heart-outline'}
+                    size={22}
+                    color={favoriteIds.has(pkg._id) ? colors.danger : colors.textMuted}
+                  />
+                </TouchableOpacity>
+              </View>
             )}
             <View style={styles.content}>
               <Text style={styles.title}>{pkg.title}</Text>
@@ -131,9 +178,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  imageWrapper: {
+    position: 'relative',
+  },
   image: {
     width: '100%',
     height: 180,
+  },
+  heartBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadowSm,
   },
   content: { padding: 16 },
   title: {

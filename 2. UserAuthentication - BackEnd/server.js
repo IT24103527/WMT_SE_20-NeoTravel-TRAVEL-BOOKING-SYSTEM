@@ -22,7 +22,10 @@ const userRoutes      = require('./src/routes/user.routes');
 const errorMiddleware = require('./src/middleware/error.middleware');
 
 //packages
-const packageRoutes = require('./src/routes/package.routes');
+const packageRoutes   = require('./src/routes/package.routes');
+
+//favorites
+const favoriteRoutes  = require('./src/routes/favorite.routes');
 
 //admin seed
 const seedAdmin = require("./src/config/seedAdmin");
@@ -50,7 +53,11 @@ app.use('/api/images', imageRoutes);
 app.use('/api/reviews', reviewRoutes);
 
 //booking and packages
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/packages', packageRoutes);
+
+//favorites
+app.use('/api/favorites', favoriteRoutes);
 
 // 404
 app.use((req, res) => {
