@@ -13,6 +13,22 @@ const favoriteSchema = new mongoose.Schema(
       ref: 'Package',
       required: true,
     },
+
+    // ── Update-able fields ──────────────────────────────────────────
+    // Personal memo the user can attach to the saved package
+    notes: {
+      type:     String,
+      default:  '',
+      trim:     true,
+      maxlength: 300,
+    },
+
+    // User-defined priority for trip planning
+    priority: {
+      type:    String,
+      enum:    ['low', 'medium', 'high'],
+      default: 'medium',
+    },
   },
   { timestamps: true }
 );

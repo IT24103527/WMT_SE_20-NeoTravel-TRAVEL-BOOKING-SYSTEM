@@ -9,6 +9,14 @@ export const toggleFavorite = (packageId) =>
 export const getMyFavorites = () =>
   axiosInstance.get('/favorites');
 
+/**
+ * Update notes and/or priority of an existing favorite.
+ * @param {string} packageId
+ * @param {{ notes?: string, priority?: 'low'|'medium'|'high' }} data
+ */
+export const updateFavorite = (packageId, data) =>
+  axiosInstance.patch(`/favorites/${packageId}`, data);
+
 /** Explicitly remove a package from favorites */
 export const removeFavorite = (packageId) =>
   axiosInstance.delete(`/favorites/${packageId}`);

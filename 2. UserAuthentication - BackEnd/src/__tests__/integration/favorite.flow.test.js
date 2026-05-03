@@ -1,7 +1,7 @@
 /**
  * Integration tests — Favorites Flow
  *
- * Tests the complete favorites journey: toggle (add), list, check, and remove.
+ * Tests the complete favorites journey: toggle (add), update, list, check, and remove.
  * Runs in isolation — only touches Favorite, Package, and User documents
  * created within this file. Does NOT affect other test suites.
  */
@@ -83,6 +83,13 @@ describe('Favorites: authentication guard', () => {
     const res = await request(app)
       .post('/api/favorites')
       .send({ packageId: testPackageId });
+    expect(res.status).toBe(401);
+  });
+
+  it('PATCH /api/favorites/:packageId returns 401 without token', async () => {
+    const res = await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .send({ notes: 'test' });
     expect(res.status).toBe(401);
   });
 
@@ -307,5 +314,114 @@ describe('Favorites: response shape', () => {
     expect(res.body).toHaveProperty('statusCode', 200);
     expect(res.body).toHaveProperty('message');
     expect(res.body).toHaveProperty('data');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FLOW 8: Update favorite (notes & priority)
+// ─────────────────────────────────────────────────────────────────────────────
+describe('Favorites: update (notes & priority)', () => {
+  // Add a favorite before each test in this group
+  beforeEach(async () => {
+    await request(app)
+      .post('/api/favorites')
+      .set(bearer(accessToken))
+      .send({ packageId: testPackageId });
+  });
+
+  it('PATCH /api/favorites/:packageId updates notes and priority', async () => {
+    const res = await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .set(bearer(accessToken))
+      .send({ notes: 'Visit in December', priority: 'high' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.notes).toBe('Visit in December');
+    expect(res.body.data.priority).toBe('high');
+    expect(res.body.data.packageId.toString()).toBe(testPackageId);
+  });
+
+  it('PATCH updates only notes when priority is omitted', async () => {
+    const res = await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .set(bearer(accessToken))
+      .send({ notes: 'Only notes updated' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.notes).toBe('Only notes updated');
+    // priority should remain at default 'medium'
+    expect(res.body.data.priority).toBe('medium');
+  });
+
+  it('PATCH updates only priority when notes is omitted', async () => {
+    const res = await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .set(bearer(accessToken))
+      .send({ priority: 'low' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.priority).toBe('low');
+  });
+
+  it('PATCH with no fields returns 400', async () => {
+    const res = await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .set(bearer(accessToken))
+      .send({});
+
+    expect(res.status).toBe(400);
+  });
+
+  it('PATCH with invalid priority returns 400', async () => {
+    const res = await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .set(bearer(accessToken))
+      .send({ priority: 'urgent' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('PATCH on a non-favorited package returns 404', async () => {
+    const fakeId = new mongoose.Types.ObjectId().toString();
+    const res = await request(app)
+      .patch(`/api/favorites/${fakeId}`)
+      .set(bearer(accessToken))
+      .send({ notes: 'Trying to update non-existent' });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('PATCH persists changes to DB correctly', async () => {
+    await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .set(bearer(accessToken))
+      .send({ notes: 'Persisted note', priority: 'high' });
+
+    const fav = await Favorite.findOne({ userId: testUserId, packageId: testPackageId });
+    expect(fav.notes).toBe('Persisted note');
+    expect(fav.priority).toBe('high');
+  });
+
+  it('PATCH updates are reflected in GET /api/favorites', async () => {
+    await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .set(bearer(accessToken))
+      .send({ notes: 'Reflected note', priority: 'low' });
+
+    const listRes = await request(app)
+      .get('/api/favorites')
+      .set(bearer(accessToken));
+
+    const fav = listRes.body.data.favorites[0];
+    expect(fav.notes).toBe('Reflected note');
+    expect(fav.priority).toBe('low');
+  });
+
+  it('PATCH returns 401 without token', async () => {
+    const res = await request(app)
+      .patch(`/api/favorites/${testPackageId}`)
+      .send({ notes: 'No auth' });
+    expect(res.status).toBe(401);
   });
 });

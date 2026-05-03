@@ -45,16 +45,63 @@ exports.getMyFavorites = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Flatten: expose package fields directly + include favoriteId
+    // Flatten: expose package fields directly + include favoriteId, notes, priority
     const packages = favorites
       .filter(f => f.packageId) // guard against deleted packages
       .map(f => ({
-        favoriteId: f._id,
+        favoriteId:  f._id,
         favoritedAt: f.createdAt,
+        notes:       f.notes,
+        priority:    f.priority,
         ...f.packageId,
       }));
 
     return respond(res).ok('Favorites fetched successfully', { favorites: packages, count: packages.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/favorites/:packageId
+ * Update the notes and/or priority of an existing favorite.
+ * Body: { notes?, priority? }
+ */
+exports.updateFavorite = async (req, res, next) => {
+  try {
+    const { packageId } = req.params;
+    const { notes, priority } = req.body;
+
+    // Validate priority value if provided
+    const VALID_PRIORITIES = ['low', 'medium', 'high'];
+    if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {
+      return next(new AppError(`priority must be one of: ${VALID_PRIORITIES.join(', ')}`, 400));
+    }
+
+    // Build only the fields that were sent
+    const updateFields = {};
+    if (notes    !== undefined) updateFields.notes    = notes;
+    if (priority !== undefined) updateFields.priority = priority;
+
+    if (Object.keys(updateFields).length === 0) {
+      return next(new AppError('Provide at least one field to update: notes or priority', 400));
+    }
+
+    const favorite = await Favorite.findOneAndUpdate(
+      { userId: req.user._id, packageId },
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!favorite) return next(new AppError('Favorite not found', 404));
+
+    return respond(res).ok('Favorite updated successfully', {
+      favoriteId: favorite._id,
+      packageId:  favorite.packageId,
+      notes:      favorite.notes,
+      priority:   favorite.priority,
+      updatedAt:  favorite.updatedAt,
+    });
   } catch (error) {
     next(error);
   }
