@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import useAuth from '../../hooks/useAuth';
+import {colors} from '../../utils/theme'
 
 export default function BottomNav() {
   const navigation = useNavigation();
@@ -23,13 +24,13 @@ export default function BottomNav() {
       <Ionicons
         name={isActive(name) ? icon : `${icon}-outline`}
         size={24}
-        color={isActive(name) ? '#007AFF' : '#999'}
+        color={isActive(name) ? colors.primary : '#999'}
       />
       <Text
         style={{
           fontSize: 12,
           marginTop: 2,
-          color: isActive(name) ? '#007AFF' : '#999',
+          color: isActive(name) ? colors.primary : '#999',
         }}
       >
         {label}

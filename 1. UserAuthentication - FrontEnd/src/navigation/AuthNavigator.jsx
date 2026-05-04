@@ -4,6 +4,7 @@ import SignupScreen         from '../screens/auth/SignupScreen';
 import VerifyEmailScreen    from '../screens/auth/VerifyEmailScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen  from '../screens/auth/ResetPasswordScreen';
+import LandingScreen        from '../screens/landing/LandingScreen';
 import { colors } from '../utils/theme';
 
 const Stack = createNativeStackNavigator();
@@ -22,7 +23,15 @@ const screenOptions = {
 
 export default function AuthNavigator() {
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator screenOptions={screenOptions} initialRouteName='Landing'>
+
+      {/*Landing screen */}
+      <Stack.Screen
+        name="Landing"
+        component={LandingScreen}
+        options={{ animation: 'fade', animationDuration: 350 }}
+      />
+
       <Stack.Screen
         name="Login"
         component={LoginScreen}
