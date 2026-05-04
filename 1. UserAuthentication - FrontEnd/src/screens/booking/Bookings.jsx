@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
 import { getMyBookings, cancelBooking } from '../../api/booking.api';
@@ -10,6 +11,7 @@ import { colors } from '../../utils/theme';
 import { format } from 'date-fns';   // you'll need to install this: npm install date-fns
 
 export default function Bookings() {
+  const navigation = useNavigation();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
