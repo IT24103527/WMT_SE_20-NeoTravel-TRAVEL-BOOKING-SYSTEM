@@ -86,3 +86,37 @@ exports.cancelBooking = async (req, res, next) => {
     next(err);
   }
 };
+
+// Process Payment
+exports.processPayment = async (req, res, next) => {
+  try {
+    const { cardNumber, expiry, cvv } = req.body;
+    
+    // Quick backend validation
+    if (!cardNumber || !expiry || !cvv) {
+      return next(new AppError('Payment details are required', 400));
+    }
+
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    });
+
+    if (!booking) throw new AppError('Booking not found', 404);
+    if (booking.status === 'cancelled') throw new AppError('Cannot pay for a cancelled booking', 400);
+    if (booking.paymentStatus === 'paid') throw new AppError('Booking is already paid', 400);
+
+    // Mock payment success logic
+    booking.paymentStatus = 'paid';
+    booking.status = 'confirmed'; // Auto-confirming the booking upon successful payment
+    await booking.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Payment successful', 
+      data: booking 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
