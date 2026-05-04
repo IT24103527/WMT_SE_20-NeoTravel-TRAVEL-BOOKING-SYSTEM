@@ -1,70 +1,88 @@
+// src/controllers/booking.controller.js
 const Booking = require('../models/Booking');
 const Package = require('../models/Package');
 const AppError = require('../utils/AppError');
 
+// Create booking (User)
 exports.createBooking = async (req, res, next) => {
   try {
-    const { packageId, bookingDate, travelers } = req.body;
-
-    if (!packageId || !bookingDate) {
-      return next(new AppError('packageId and bookingDate are required', 400));
-    }
+    const { packageId, bookingDate, travelers = 1 } = req.body;
 
     const pkg = await Package.findById(packageId);
-    if (!pkg) {
-      return next(new AppError('Package not found', 404));
-    }
+    if (!pkg) throw new AppError('Package not found', 404);
+
+    const totalPrice = pkg.price * travelers;
 
     const booking = await Booking.create({
-      userId: req.user._id,
-      packageId,
+      user: req.user._id,
+      package: packageId,
       bookingDate,
-      travelers: travelers || 1,
+      travelers,
+      totalPrice,
+      status: 'pending',
+      paymentStatus: 'pending'
     });
 
-    res.status(201).json({ success: true, booking });
-  } catch (error) {
-    next(error);
+    await booking.populate('package');
+
+    res.status(201).json({
+      success: true,
+      data: booking
+    });
+  } catch (err) {
+    next(err);
   }
 };
 
-exports.getBookings = async (req, res, next) => {
+// Get my bookings
+exports.getMyBookings = async (req, res, next) => {
   try {
-    const bookings = await Booking.find({ userId: req.user._id })
-      .populate('packageId', 'title description destination duration price image')
-      .sort({ createdAt: -1 })
-      .lean();
+    const bookings = await Booking.find({ user: req.user._id })
+      .populate('package', 'title description price image')
+      .sort({ createdAt: -1 });
 
-    // Transform packageId to package for consistency
-    const transformedBookings = bookings.map(booking => ({
-      ...booking,
-      package: booking.packageId,
-      packageId: undefined,
-    }));
-
-    res.json({ success: true, bookings: transformedBookings });
-  } catch (error) {
-    next(error);
+    res.json({
+      success: true,
+      data: bookings
+    });
+  } catch (err) {
+    next(err);
   }
 };
 
-exports.getBooking = async (req, res, next) => {
+// Admin: Get all bookings
+exports.getAllBookings = async (req, res, next) => {
   try {
-    const booking = await Booking.findOne({ _id: req.params.id, userId: req.user._id })
-      .populate('packageId', 'title description destination duration price image');
+    const bookings = await Booking.find()
+      .populate('user', 'username email')
+      .populate('package', 'title price')
+      .sort({ createdAt: -1 });
 
-    if (!booking) {
-      return next(new AppError('Booking not found', 404));
-    }
+    res.json({
+      success: true,
+      data: bookings
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
-    const transformedBooking = {
-      ...booking.toObject(),
-      package: booking.packageId,
-      packageId: undefined,
-    };
+// Optional: Cancel booking (user)
+exports.cancelBooking = async (req, res, next) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    });
 
-    res.json({ success: true, booking: transformedBooking });
-  } catch (error) {
-    next(error);
+    if (!booking) throw new AppError('Booking not found', 404);
+    if (booking.status === 'cancelled') throw new AppError('Already cancelled', 400);
+
+    booking.status = 'cancelled';
+    await booking.save();
+
+    res.json({ success: true, message: 'Booking cancelled' });
+  } catch (err) {
+    next(err);
   }
 };
