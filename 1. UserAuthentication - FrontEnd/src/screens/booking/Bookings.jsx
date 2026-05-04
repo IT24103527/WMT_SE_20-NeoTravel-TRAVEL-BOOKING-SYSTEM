@@ -97,6 +97,18 @@ export default function Bookings() {
                 </Text>
               </TouchableOpacity>
             )}
+
+            {booking.status !== 'cancelled' && booking.paymentStatus === 'pending' && (
+              <TouchableOpacity 
+                style={{ backgroundColor: colors.primary, padding: 10, borderRadius: 8, marginTop: 10 }}
+                onPress={() => navigation.navigate('Payment', { bookingId: booking._id, amount: booking.totalPrice })}
+              >
+                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '700' }}>
+                  Pay Now
+                </Text>
+              </TouchableOpacity>
+            )}
+
           </View>
         ))
       )}
