@@ -20,7 +20,7 @@ const favoriteSchema = new mongoose.Schema(
       type:     String,
       default:  '',
       trim:     true,
-      maxlength: 300,
+      maxlength: 50,
     },
 
     // User-defined priority for trip planning

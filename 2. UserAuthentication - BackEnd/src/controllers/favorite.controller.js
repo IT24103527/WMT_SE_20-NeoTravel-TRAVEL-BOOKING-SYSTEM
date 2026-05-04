@@ -72,6 +72,12 @@ exports.updateFavorite = async (req, res, next) => {
     const { packageId } = req.params;
     const { notes, priority } = req.body;
 
+    // Validate notes length if provided
+    const NOTES_MAX = 50;
+    if (notes !== undefined && notes.length > NOTES_MAX) {
+      return next(new AppError(`notes must be ${NOTES_MAX} characters or fewer`, 400));
+    }
+
     // Validate priority value if provided
     const VALID_PRIORITIES = ['low', 'medium', 'high'];
     if (priority !== undefined && !VALID_PRIORITIES.includes(priority)) {

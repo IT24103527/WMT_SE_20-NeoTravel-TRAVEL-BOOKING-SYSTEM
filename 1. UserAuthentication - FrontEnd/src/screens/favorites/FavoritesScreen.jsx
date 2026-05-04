@@ -76,8 +76,14 @@ export default function FavoritesScreen() {
   };
 
   // ── Save update ──────────────────────────────────────────────────
+  const NOTES_MAX = 50;
+
   const handleSaveEdit = async () => {
     if (!editTarget) return;
+    if (draftNotes.length > NOTES_MAX) {
+      Alert.alert('Note too long', `Personal notes must be ${NOTES_MAX} characters or fewer.`);
+      return;
+    }
     setSaving(true);
     try {
       await updateFavorite(editTarget._id, {
@@ -295,16 +301,28 @@ export default function FavoritesScreen() {
             {/* Notes input */}
             <Text style={styles.fieldLabel}>Personal Notes</Text>
             <TextInput
-              style={styles.notesInput}
+              style={[
+                styles.notesInput,
+                draftNotes.length >= NOTES_MAX && styles.notesInputOver,
+              ]}
               value={draftNotes}
-              onChangeText={setDraftNotes}
-              placeholder="e.g. Visit in December, book 3 months early…"
+              onChangeText={(text) => {
+                if (text.length <= NOTES_MAX) setDraftNotes(text);
+              }}
+              placeholder="e.g. Visit in December…"
               placeholderTextColor={colors.textMuted}
               multiline
-              maxLength={300}
+              maxLength={NOTES_MAX}
               textAlignVertical="top"
             />
-            <Text style={styles.charCount}>{draftNotes.length}/300</Text>
+            <Text
+              style={[
+                styles.charCount,
+                draftNotes.length >= NOTES_MAX && styles.charCountOver,
+              ]}
+            >
+              {draftNotes.length}/{NOTES_MAX}
+            </Text>
 
             {/* Buttons */}
             <View style={styles.modalActions}>
@@ -611,11 +629,18 @@ const styles = StyleSheet.create({
     minHeight: 100,
     marginBottom: 4,
   },
+  notesInputOver: {
+    borderColor: '#DC2626',
+  },
   charCount: {
     fontSize: 11,
     color: colors.textMuted,
     textAlign: 'right',
     marginBottom: 20,
+  },
+  charCountOver: {
+    color: '#DC2626',
+    fontWeight: '700',
   },
 
   // Modal action buttons
