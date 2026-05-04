@@ -207,34 +207,7 @@ export default function Packages() {
   };
 
   const handleBookNow = (pkg) => {
-    Alert.alert(
-      'Confirm Booking',
-      `Book "${pkg.title}" for $${pkg.price}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            setBookingLoading(pkg._id);
-            try {
-              await createBooking({
-                packageId: pkg._id,
-                bookingDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                travelers: 1,
-              });
-              Alert.alert('Booking Created!', 'Your trip is confirmed 🎉', [
-                { text: 'My Bookings', onPress: () => navigation.navigate('Bookings') },
-                { text: 'OK', style: 'cancel' },
-              ]);
-            } catch (err) {
-              Alert.alert('Failed', err.response?.data?.message || 'Could not create booking');
-            } finally {
-              setBookingLoading(null);
-            }
-          },
-        },
-      ]
-    );
+    navigation.navigate('CreateBooking', { package: pkg });
   };
 
   // Filter packages: search + category (multi‑category support)

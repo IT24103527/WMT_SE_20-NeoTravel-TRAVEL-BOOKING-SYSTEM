@@ -17,6 +17,7 @@ import Bookings from '../screens/booking/Bookings';
 import AdminPackages from '../screens/packages/AdminPackages'
 import FavoritesScreen from '../screens/favorites/FavoritesScreen'
 import PaymentScreen from '../screens/booking/PaymentScreen';
+import CreateBookingScreen from '../screens/booking/CreateBookingScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -81,6 +82,7 @@ export default function MainNavigator() {
       />
 
     <Stack.Screen name="Payment" component={PaymentScreen} options={{ title: 'Secure Checkout' }} />
+    <Stack.Screen name="CreateBooking" component={CreateBookingScreen} options={{ title: 'Complete Booking' }} />
       
     </Stack.Navigator>
   );

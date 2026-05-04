@@ -114,8 +114,9 @@ export default function PackageDetails() {
       : [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Cover Image */}
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Cover Image */}
       {(coverImage || pkg.image) && (
         <View style={styles.coverImageSection}>
           <Image
@@ -195,7 +196,18 @@ export default function PackageDetails() {
           </ScrollView>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+
+      {/* Fixed Book Now Button */}
+      <View style={{ padding: 16, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.border }}>
+        <TouchableOpacity 
+          style={{ backgroundColor: colors.primary, padding: 16, borderRadius: 12, alignItems: 'center' }}
+          onPress={() => navigation.navigate('CreateBooking', { package: pkg })}
+        >
+          <Text style={{ color: colors.white, fontSize: 18, fontWeight: '700' }}>Book Now</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 

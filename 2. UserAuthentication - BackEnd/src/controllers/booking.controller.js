@@ -6,7 +6,7 @@ const AppError = require('../utils/AppError');
 // Create booking (User)
 exports.createBooking = async (req, res, next) => {
   try {
-    const { packageId, bookingDate, travelers = 1 } = req.body;
+    const { packageId, bookingDate, travelers = 1, specialRequests } = req.body;
 
     const pkg = await Package.findById(packageId);
     if (!pkg) throw new AppError('Package not found', 404);
@@ -18,6 +18,7 @@ exports.createBooking = async (req, res, next) => {
       package: packageId,
       bookingDate,
       travelers,
+      specialRequests,
       totalPrice,
       status: 'pending',
       paymentStatus: 'pending'
@@ -116,6 +117,25 @@ exports.processPayment = async (req, res, next) => {
       message: 'Payment successful', 
       data: booking 
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Delete cancelled booking
+exports.deleteBooking = async (req, res, next) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    });
+
+    if (!booking) throw new AppError('Booking not found', 404);
+    if (booking.status !== 'cancelled') throw new AppError('Only cancelled bookings can be deleted', 400);
+
+    await booking.deleteOne();
+
+    res.json({ success: true, message: 'Booking permanently deleted' });
   } catch (err) {
     next(err);
   }

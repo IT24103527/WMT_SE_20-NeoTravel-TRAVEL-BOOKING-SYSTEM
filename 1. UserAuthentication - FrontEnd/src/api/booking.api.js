@@ -6,3 +6,4 @@ export const getMyBookings = () => axiosInstance.get('/bookings/me');
 export const getAllBookings = () => axiosInstance.get('/bookings'); // admin only
 export const cancelBooking = (id) => axiosInstance.patch(`/bookings/${id}/cancel`);
 export const processPayment = (id, paymentData) => axiosInstance.patch(`/bookings/${id}/pay`, paymentData);
+export const deleteBooking = (id) => axiosInstance.delete(`/bookings/${id}`);
