@@ -15,9 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, shadowSm } from '../../utils/theme';
 
 // Replace with your local image if needed, e.g. require('../../assets/landing-bg.jpg')
-const backgroundImage = {
-  uri: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200',
-};
+const backgroundImage = require('../../images/landing-image.jpg');
 
 export default function LandingScreen() {
   const navigation = useNavigation();

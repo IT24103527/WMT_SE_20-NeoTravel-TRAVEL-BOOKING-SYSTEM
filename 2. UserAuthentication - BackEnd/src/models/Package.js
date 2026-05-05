@@ -12,7 +12,6 @@ const packageSchema = new mongoose.Schema({
   categories: [{
     type: String,
     enum: ["Popular", "Beach", "Adventure", "Cultural", "Luxury"],
-    default: "Popular",
     required : true
   }],
 

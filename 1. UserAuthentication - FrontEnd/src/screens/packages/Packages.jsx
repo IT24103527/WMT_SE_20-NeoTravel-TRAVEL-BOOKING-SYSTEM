@@ -48,7 +48,7 @@ function getPackageCategories(pkg) {
 }
 
 // ── Package card ───────────────────────────────────────────────────────────────
-function PackageCard({ pkg, isFavorite, toggling, onFavorite, onBook, onDetails, bookingLoading }) {
+function PackageCard({ pkg, isFavorite, toggling, onFavorite, onBook, onDetails,onReviews, bookingLoading }) {
   const categories = getPackageCategories(pkg);
 
   return (
@@ -126,7 +126,11 @@ function PackageCard({ pkg, isFavorite, toggling, onFavorite, onBook, onDetails,
         </View>
 
         {/* Reviews ghost link */}
-        <TouchableOpacity style={styles.reviewsLink} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.reviewsLink}
+          activeOpacity={0.7}
+          onPress={() => onReviews(pkg)}
+        >
           <Ionicons name="star" size={12} color={colors.primary} />
           <Text style={styles.reviewsText}>See Reviews</Text>
         </TouchableOpacity>
@@ -301,6 +305,12 @@ export default function Packages() {
               onFavorite={handleToggleFavorite}
               onBook={handleBookNow}
               onDetails={(p) => navigation.navigate('PackageDetails', { packageId: p._id })}
+               onReviews={(p) =>
+                navigation.navigate('Reviews', {
+                  packageId: p._id,
+                  packageTitle: p.title,
+                })
+              }
             />
           ))
         )}

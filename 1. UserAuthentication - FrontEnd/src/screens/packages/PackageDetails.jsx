@@ -8,13 +8,16 @@ import {
   Alert,
   Dimensions,
   TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import Loader from '../../components/common/Loader';
 import { getPackageById } from '../../api/package.api';
 import { getImagesByPackage, resolveUploadUrl, deleteImage } from '../../api/image.api';
 import { getPackageReviews } from '../../api/review.api';
-import { colors, shadowSm } from '../../utils/theme';
+import { colors } from '../../utils/theme';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -42,14 +45,11 @@ export default function PackageDetails() {
       const packageData = packageRes.data.data || packageRes.data;
       setPkg(packageData);
 
-      // Handle both old and new API response formats
       const imagesData = imagesRes.data;
       if (imagesData.coverImage !== undefined) {
-        // New API format with cover and gallery
         setCoverImage(imagesData.coverImage);
         setGalleryImages(imagesData.galleryImages || []);
       } else {
-        // Fallback to old format
         const allImages = imagesData.images || [];
         setCoverImage(null);
         setGalleryImages(allImages);
@@ -91,8 +91,8 @@ export default function PackageDetails() {
             } catch (err) {
               Alert.alert('Error', err.response?.data?.message || 'Failed to delete image');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -102,6 +102,7 @@ export default function PackageDetails() {
   if (!pkg) {
     return (
       <View style={styles.emptyContainer}>
+        <Ionicons name="cube-outline" size={48} color={colors.textMuted} />
         <Text style={styles.emptyText}>Package not found.</Text>
       </View>
     );
@@ -113,98 +114,131 @@ export default function PackageDetails() {
       ? [{ uri: resolveUploadUrl(pkg.image) }]
       : [];
 
+  const avgRating = Number(reviewSummary.averageRating || 0);
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {/* Cover Image */}
-      {(coverImage || pkg.image) && (
-        <View style={styles.coverImageSection}>
-          <Image
-            source={{
-              uri: coverImage
-                ? resolveUploadUrl(coverImage.url)
-                : resolveUploadUrl(pkg.image),
-            }}
-            style={styles.coverImage}
-            resizeMode="cover"
-          />
-          {coverImage && (
-            <TouchableOpacity
-              style={styles.coverDeleteButton}
-              onPress={() => handleDeleteImage(coverImage._id, coverImage.filename)}
-            >
-              <Text style={styles.deleteIcon}>×</Text>
-            </TouchableOpacity>
-          )}
-          <View style={styles.coverBadge}>
-            <Text style={styles.coverBadgeText}>Cover Image</Text>
-          </View>
-        </View>
-      )}
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
 
-      <Text style={styles.title}>{pkg.title}</Text>
-      <Text style={styles.price}>${pkg.price}</Text>
-      <Text style={styles.description}>{pkg.description}</Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-      <View style={styles.reviewCard}>
-        <Text style={styles.sectionTitle}>Ratings</Text>
-        <View style={styles.ratingRow}>
-          <Text style={styles.ratingValue}>{Number(reviewSummary.averageRating || 0).toFixed(1)}</Text>
-          <View style={styles.starsRow}>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Text
-                key={index}
-                style={[
-                  styles.star,
-                  index < Math.round(reviewSummary.averageRating || 0) && styles.starActive,
-                ]}
+        {/* ── Cover Image ── */}
+        {(coverImage || pkg.image) && (
+          <View style={styles.coverImageSection}>
+            <Image
+              source={{
+                uri: coverImage
+                  ? resolveUploadUrl(coverImage.url)
+                  : resolveUploadUrl(pkg.image),
+              }}
+              style={styles.coverImage}
+              resizeMode="cover"
+            />
+
+            {/* Gradient overlay strip */}
+            <View style={styles.coverOverlay} />
+
+            {/* Price badge — bottom left on image */}
+            <View style={styles.priceBadge}>
+              <Text style={styles.priceBadgeText}>${pkg.price}</Text>
+            </View>
+
+            {/* Cover label — bottom right */}
+            <View style={styles.coverBadge}>
+              <Text style={styles.coverBadgeText}>Cover Image</Text>
+            </View>
+
+            {/* Delete button — top right */}
+            {coverImage && (
+              <TouchableOpacity
+                style={styles.coverDeleteButton}
+                onPress={() => handleDeleteImage(coverImage._id, coverImage.filename)}
+                activeOpacity={0.8}
               >
-                ★
-              </Text>
-            ))}
+                <Ionicons name="close" size={16} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
-          <Text style={styles.reviewCount}>{reviewSummary.reviewCount || 0} reviews</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.reviewButton}
-          onPress={() => navigation.navigate('Reviews', { packageId: pkg._id, packageTitle: pkg.title })}
-        >
-          <Text style={styles.reviewButtonText}>View / Add Reviews</Text>
-        </TouchableOpacity>
-      </View>
+        )}
 
-      {/* Gallery Images */}
-      {galleryImages.length > 0 && (
-        <View style={styles.gallerySection}>
-          <Text style={styles.sectionTitle}>Gallery</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
-            {galleryImages.map((image) => (
-              <View key={image._id} style={styles.imageContainer}>
-                <Image
-                  source={{ uri: resolveUploadUrl(image.url) }}
-                  style={styles.galleryImage}
-                  resizeMode="cover"
-                />
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDeleteImage(image._id, image.filename)}
-                >
-                  <Text style={styles.deleteIcon}>×</Text>
-                </TouchableOpacity>
+        {/* ── Title & Description ── */}
+        <Text style={styles.title}>{pkg.title}</Text>
+        <Text style={styles.description}>{pkg.description}</Text>
+
+        {/* ── Ratings Card ── */}
+        <View style={styles.reviewCard}>
+          <Text style={styles.sectionTitle}>Ratings & Reviews</Text>
+
+          <View style={styles.ratingRow}>
+            <Text style={styles.ratingValue}>{avgRating.toFixed(1)}</Text>
+
+            <View style={styles.starsAndCount}>
+              <View style={styles.starsRow}>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Ionicons
+                    key={index}
+                    name={index < Math.round(avgRating) ? 'star' : 'star-outline'}
+                    size={16}
+                    color={index < Math.round(avgRating) ? '#F4A91B' : colors.border}
+                  />
+                ))}
               </View>
-            ))}
-          </ScrollView>
+              <Text style={styles.reviewCount}>{reviewSummary.reviewCount || 0} reviews</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.reviewButton}
+            onPress={() => navigation.navigate('Reviews', { packageId: pkg._id, packageTitle: pkg.title })}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="chatbubble-ellipses-outline" size={15} color="#fff" />
+            <Text style={styles.reviewButtonText}>View / Add Reviews</Text>
+          </TouchableOpacity>
         </View>
-      )}
+
+        {/* ── Gallery ── */}
+        {galleryImages.length > 0 && (
+          <View style={styles.gallerySection}>
+            <Text style={styles.sectionTitle}>Gallery</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.galleryScroll}>
+              {galleryImages.map((image) => (
+                <View key={image._id} style={styles.imageContainer}>
+                  <Image
+                    source={{ uri: resolveUploadUrl(image.url) }}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteImage(image._id, image.filename)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="close" size={14} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Bottom breathing room so content clears the fixed button */}
+        <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* Fixed Book Now Button */}
-      <View style={{ padding: 16, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.border }}>
-        <TouchableOpacity 
-          style={{ backgroundColor: colors.primary, padding: 16, borderRadius: 12, alignItems: 'center' }}
+      {/* ── Fixed Book Now ── */}
+      <View style={styles.bookBar}>
+        <View style={styles.bookBarLeft}>
+          <Text style={styles.bookBarLabel}>Total price</Text>
+          <Text style={styles.bookBarPrice}>${pkg.price}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.bookBtn}
           onPress={() => navigation.navigate('CreateBooking', { package: pkg })}
+          activeOpacity={0.85}
         >
-          <Text style={{ color: colors.white, fontSize: 18, fontWeight: '700' }}>Book Now</Text>
+          <Text style={styles.bookBtnText}>Book Now</Text>
+          <Ionicons name="arrow-forward" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>
@@ -212,81 +246,156 @@ export default function PackageDetails() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  root: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1 },
   content: { padding: 16 },
+
+  // ── Cover ──────────────────────────────────────────────────────────────────
   coverImageSection: {
     position: 'relative',
     marginBottom: 20,
-    borderRadius: 20,
+    borderRadius: 22,
     overflow: 'hidden',
-    ...shadowSm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
   coverImage: {
     width: '100%',
     height: 280,
     backgroundColor: colors.surfaceHigh,
   },
+  coverOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
+  },
+  priceBadge: {
+    position: 'absolute',
+    bottom: 14,
+    left: 16,
+    backgroundColor: colors.primary,
+    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+  },
+  priceBadgeText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  coverBadge: {
+    position: 'absolute',
+    bottom: 14,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  coverBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+  },
   coverDeleteButton: {
     position: 'absolute',
     top: 12,
     right: 12,
     backgroundColor: colors.danger,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadowSm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  coverBadge: {
-    position: 'absolute',
-    bottom: 12,
-    left: 12,
-    backgroundColor: colors.primary + 'E6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+
+  // ── Text ──────────────────────────────────────────────────────────────────
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    letterSpacing: -0.5,
+    marginBottom: 10,
   },
-  coverBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.white,
+  description: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    lineHeight: 24,
+    marginBottom: 22,
   },
-  title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary, marginBottom: 12 },
-  price: { fontSize: 22, fontWeight: '700', color: colors.primary, marginBottom: 16 },
-  description: { fontSize: 16, color: colors.textSecondary, lineHeight: 24, marginBottom: 24 },
+
+  // ── Review card ───────────────────────────────────────────────────────────
   reviewCard: {
-    padding: 16,
-    borderRadius: 18,
     backgroundColor: colors.card,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 20,
-    ...shadowSm,
+    padding: 18,
+    marginBottom: 22,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-  ratingValue: { fontSize: 26, fontWeight: '800', color: colors.primary },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    letterSpacing: -0.2,
+    marginBottom: 14,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 16,
+  },
+  ratingValue: {
+    fontSize: 38,
+    fontWeight: '800',
+    color: colors.primary,
+    letterSpacing: -1,
+  },
+  starsAndCount: { gap: 6 },
   starsRow: { flexDirection: 'row', gap: 3 },
-  star: { fontSize: 18, color: colors.border },
-  starActive: { color: colors.warning },
-  reviewCount: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+  reviewCount: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
   reviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
     backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 14,
-    alignItems: 'center',
   },
-  reviewButtonText: { color: colors.white, fontWeight: '700', fontSize: 14 },
-  gallerySection: { marginTop: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
-  galleryScroll: { marginBottom: 20 },
+  reviewButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  // ── Gallery ───────────────────────────────────────────────────────────────
+  gallerySection: { marginBottom: 8 },
+  galleryScroll: { marginBottom: 4 },
   imageContainer: {
     position: 'relative',
-    marginRight: 16,
+    marginRight: 14,
   },
   galleryImage: {
-    width: screenWidth * 0.8,
-    height: 220,
+    width: screenWidth * 0.78,
+    height: 215,
     borderRadius: 20,
     backgroundColor: colors.surfaceHigh,
   },
@@ -300,21 +409,65 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadowSm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  deleteIcon: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  emptyGallery: {
-    padding: 24,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
+
+  // ── Book bar ──────────────────────────────────────────────────────────────
+  bookBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    paddingBottom: 28,
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  emptyText: { color: colors.textMuted, textAlign: 'center' },
-  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  bookBarLeft: { gap: 2 },
+  bookBarLabel: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  bookBarPrice: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primary,
+    letterSpacing: -0.4,
+  },
+  bookBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 15,
+    borderRadius: 16,
+  },
+  bookBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  // ── Empty ─────────────────────────────────────────────────────────────────
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    padding: 20,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });

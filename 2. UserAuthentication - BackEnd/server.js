@@ -38,7 +38,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '20mb' }));
 app.use('/api', apiLimiter);
 
 // Health check

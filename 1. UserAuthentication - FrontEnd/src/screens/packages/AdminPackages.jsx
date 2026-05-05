@@ -95,7 +95,7 @@ export default function AdminPackages() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingPackage, setEditingPackage] = useState(null);
-  const [formData, setFormData] = useState({ title: '', description: '', price: '', categories: ['Popular'] });
+  const [formData, setFormData] = useState({ title: '', description: '', price: '', categories: [] });
   const [newImages, setNewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [coverImageId, setCoverImageId] = useState(null);
@@ -155,7 +155,7 @@ export default function AdminPackages() {
       setEditingPackage(pkg);
       let categories = pkg.categories;
       if (!categories || categories.length === 0) {
-        categories = pkg.category ? [pkg.category] : ['Popular'];
+        categories = pkg.category ? [pkg.category] : [];
       }
       setFormData({
         title: pkg.title || '',
@@ -166,7 +166,7 @@ export default function AdminPackages() {
       await fetchExistingImages(pkg._id);
     } else {
       setEditingPackage(null);
-      setFormData({ title: '', description: '', price: '', categories: ['Popular'] });
+      setFormData({ title: '', description: '', price: '', categories: [] });
     }
     setModalVisible(true);
   };
@@ -304,7 +304,7 @@ export default function AdminPackages() {
     if (pkg.category && typeof pkg.category === 'string') {
       return [pkg.category];
     }
-    return ['Popular'];
+    return [];
   };
 
   if (loading) return <Loader />;
@@ -443,7 +443,7 @@ export default function AdminPackages() {
                       let newCats;
                       if (isSelected) {
                         newCats = formData.categories.filter(c => c !== cat);
-                        if (newCats.length === 0) newCats = ['Popular'];
+                        if (newCats.length === 0) newCats = [];
                       } else {
                         newCats = [...formData.categories, cat];
                       }
